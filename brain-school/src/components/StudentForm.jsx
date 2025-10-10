@@ -16,16 +16,36 @@ import {
 import {
     School,
     Person,
-    Grade,
+    Assignment,
+    Subject,
     MenuBook,
-    EmojiObjects,
-    Speed
+    TrendingUp,
+    CheckCircle,
+    Star
 } from '@mui/icons-material';
-
 
 const steps = ['Informações Pessoais', 'Detalhes do Quiz', 'Confirmação'];
 
+// Séries do Ensino Fundamental Brasileiro
+const grades = [
+    { value: '1º ano EF', label: '1º ano do Ensino Fundamental' },
+    { value: '2º ano EF', label: '2º ano do Ensino Fundamental' },
+    { value: '3º ano EF', label: '3º ano do Ensino Fundamental' },
+    { value: '4º ano EF', label: '4º ano do Ensino Fundamental' },
+    { value: '5º ano EF', label: '5º ano do Ensino Fundamental' },
+    { value: '6º ano EF', label: '6º ano do Ensino Fundamental' },
+    { value: '7º ano EF', label: '7º ano do Ensino Fundamental' },
+    { value: '8º ano EF', label: '8º ano do Ensino Fundamental' },
+    { value: '9º ano EF', label: '9º ano do Ensino Fundamental' },
+    { value: '1º ano EM', label: '1º ano do Ensino Médio' },
+    { value: '2º ano EM', label: '2º ano do Ensino Médio' },
+    { value: '3º ano EM', label: '3º ano do Ensino Médio' },
+    { value: 'Pré-vestibular', label: 'Pré-vestibular' },
+    { value: 'Graduação', label: 'Graduação' },
+];
+
 const subjects = [
+    
     { value: 'História', label: 'História' },
     { value: 'Matemática', label: 'Matemática' },
     { value: 'Ciências', label: 'Ciências' },
@@ -35,6 +55,10 @@ const subjects = [
     { value: 'Física', label: 'Física' },
     { value: 'Química', label: 'Química' },
     { value: 'Biologia', label: 'Biologia' },
+    { value: 'Artes', label: 'Artes' },
+    { value: 'Educação Física', label: 'Educação Física' },
+    { value: 'Filosofia', label: 'Filosofia' },
+    { value: 'Sociologia', label: 'Sociologia' },
 ];
 
 const difficulties = [
@@ -48,7 +72,7 @@ export default function StudentForm({ onSubmit, loading }) {
     const [formData, setFormData] = useState({
         name: '',
         school: '',
-        grade: '',
+        grade: '6º ano EF',
         subject: 'História',
         theme: '',
         difficulty: 'medium'
@@ -120,6 +144,7 @@ export default function StudentForm({ onSubmit, loading }) {
                         />
 
                         <TextField
+                            select
                             fullWidth
                             label="Série/Ano"
                             name="grade"
@@ -127,11 +152,16 @@ export default function StudentForm({ onSubmit, loading }) {
                             onChange={handleChange}
                             required
                             InputProps={{
-                                startAdornment: <Grade sx={{ color: 'text.secondary', mr: 1 }} />
+                                startAdornment: <Assignment sx={{ color: 'text.secondary', mr: 1 }} />
                             }}
-                            placeholder="Ex: 9º ano, 2º EM, 3º ano"
-                            helperText="Informe sua série ou ano de estudo"
-                        />
+                            helperText="Selecione sua série atual"
+                        >
+                            {grades.map((grade) => (
+                                <MenuItem key={grade.value} value={grade.value}>
+                                    {grade.label}
+                                </MenuItem>
+                            ))}
+                        </TextField>
                     </Box>
                 );
 
@@ -165,7 +195,7 @@ export default function StudentForm({ onSubmit, loading }) {
                             onChange={handleChange}
                             required
                             InputProps={{
-                                startAdornment: <Topic sx={{ color: 'text.secondary', mr: 1 }} />
+                                startAdornment: <MenuBook sx={{ color: 'text.secondary', mr: 1 }} />
                             }}
                             placeholder="Ex: Guerra Fria, Fotossíntese, Funções Quadráticas"
                             helperText="Seja específico para obter questões mais relevantes"
@@ -179,7 +209,7 @@ export default function StudentForm({ onSubmit, loading }) {
                             value={formData.difficulty}
                             onChange={handleChange}
                             InputProps={{
-                                startAdornment: <Difficulty sx={{ color: 'text.secondary', mr: 1 }} />
+                                startAdornment: <TrendingUp sx={{ color: 'text.secondary', mr: 1 }} />
                             }}
                         >
                             {difficulties.map((option) => (
@@ -196,38 +226,43 @@ export default function StudentForm({ onSubmit, loading }) {
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <Paper variant="outlined" sx={{ p: 3, bgcolor: 'background.default' }}>
                             <Typography variant="h6" gutterBottom color="primary.main">
-                                📋 Resumo do Quiz
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <CheckCircle color="primary" />
+                                    📋 Resumo do Quiz
+                                </Box>
                             </Typography>
 
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">Aluno:</Typography>
                                     <Typography variant="body2" fontWeight="medium">{formData.name}</Typography>
                                 </Box>
 
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">Escola:</Typography>
                                     <Typography variant="body2" fontWeight="medium">{formData.school}</Typography>
                                 </Box>
 
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">Série:</Typography>
-                                    <Typography variant="body2" fontWeight="medium">{formData.grade}</Typography>
+                                    <Typography variant="body2" fontWeight="medium">
+                                        {grades.find(g => g.value === formData.grade)?.label}
+                                    </Typography>
                                 </Box>
 
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">Disciplina:</Typography>
                                     <Typography variant="body2" fontWeight="medium">{formData.subject}</Typography>
                                 </Box>
 
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">Tema:</Typography>
                                     <Typography variant="body2" fontWeight="medium" color="primary.main">
                                         {formData.theme}
                                     </Typography>
                                 </Box>
 
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">Dificuldade:</Typography>
                                     <Typography variant="body2" fontWeight="medium">
                                         {difficulties.find(d => d.value === formData.difficulty)?.label}
@@ -237,7 +272,10 @@ export default function StudentForm({ onSubmit, loading }) {
                         </Paper>
 
                         <Typography variant="body2" color="text.secondary" textAlign="center">
-                            🚀 Pronto para começar? Clique em "Criar Quiz" para gerar suas questões!
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                                <Star color="primary" />
+                                🚀 Pronto para começar? Clique em "Criar Quiz" para gerar suas questões!
+                            </Box>
                         </Typography>
                     </Box>
                 );
@@ -279,7 +317,7 @@ export default function StudentForm({ onSubmit, loading }) {
                             type="submit"
                             variant="contained"
                             disabled={loading || !isStepValid()}
-                            startIcon={loading ? <CircularProgress size={16} /> : null}
+                            startIcon={loading ? <CircularProgress size={16} /> : <CheckCircle />}
                             sx={{
                                 px: 4,
                                 py: 1.5,
