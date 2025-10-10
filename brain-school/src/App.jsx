@@ -4,7 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, Container, Box, Typography, Paper } from '@mui/material';
 import StudentForm from './components/StudentForm';
 import QuizGame from './components/QuizGame';
-import { generateQuizQuestions } from './services/openAI';
+import { generateQuizQuestions } from './services/gemini'; // ✅ CORRIGIDO - Agora usa Gemini
 
 // Tema personalizado do Material-UI
 const theme = createTheme({
@@ -96,7 +96,7 @@ function App() {
                 WebkitTextFillColor: 'transparent'
               }}
             >
-              🎓 Brain School
+              🎓 Quizz
             </Typography>
             <Typography variant="h6" color="text.secondary" paragraph>
               Crie quizzes personalizados e estude de forma divertida!
@@ -127,7 +127,7 @@ function App() {
           {/* Footer */}
           <Box textAlign="center" mt={4}>
             <Typography variant="body2" color="text.secondary">
-              Desenvolvido para ajudar nos estudos • Brain School 🚀
+              Desenvolvido para ajudar nos estudos • Quizz School 🚀
             </Typography>
           </Box>
         </Container>

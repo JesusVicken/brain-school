@@ -1,4 +1,3 @@
-// src/components/StudentForm.jsx
 import { useState } from 'react';
 import {
     Box,
@@ -45,7 +44,6 @@ const grades = [
 ];
 
 const subjects = [
-    
     { value: 'História', label: 'História' },
     { value: 'Matemática', label: 'Matemática' },
     { value: 'Ciências', label: 'Ciências' },
@@ -129,7 +127,6 @@ export default function StudentForm({ onSubmit, loading }) {
                             placeholder="Digite seu nome completo"
                             helperText="Seu nome será usado no certificado do quiz"
                         />
-
                         <TextField
                             fullWidth
                             label="Escola"
@@ -142,7 +139,6 @@ export default function StudentForm({ onSubmit, loading }) {
                             }}
                             placeholder="Nome da sua escola ou instituição"
                         />
-
                         <TextField
                             select
                             fullWidth
@@ -186,7 +182,6 @@ export default function StudentForm({ onSubmit, loading }) {
                                 </MenuItem>
                             ))}
                         </TextField>
-
                         <TextField
                             fullWidth
                             label="Tema do Quiz"
@@ -200,7 +195,6 @@ export default function StudentForm({ onSubmit, loading }) {
                             placeholder="Ex: Guerra Fria, Fotossíntese, Funções Quadráticas"
                             helperText="Seja específico para obter questões mais relevantes"
                         />
-
                         <TextField
                             select
                             fullWidth
@@ -231,37 +225,31 @@ export default function StudentForm({ onSubmit, loading }) {
                                     📋 Resumo do Quiz
                                 </Box>
                             </Typography>
-
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">Aluno:</Typography>
                                     <Typography variant="body2" fontWeight="medium">{formData.name}</Typography>
                                 </Box>
-
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">Escola:</Typography>
                                     <Typography variant="body2" fontWeight="medium">{formData.school}</Typography>
                                 </Box>
-
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">Série:</Typography>
                                     <Typography variant="body2" fontWeight="medium">
                                         {grades.find(g => g.value === formData.grade)?.label}
                                     </Typography>
                                 </Box>
-
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">Disciplina:</Typography>
                                     <Typography variant="body2" fontWeight="medium">{formData.subject}</Typography>
                                 </Box>
-
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">Tema:</Typography>
                                     <Typography variant="body2" fontWeight="medium" color="primary.main">
                                         {formData.theme}
                                     </Typography>
                                 </Box>
-
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">Dificuldade:</Typography>
                                     <Typography variant="body2" fontWeight="medium">
@@ -271,7 +259,8 @@ export default function StudentForm({ onSubmit, loading }) {
                             </Box>
                         </Paper>
 
-                        <Typography variant="body2" color="text.secondary" textAlign="center">
+                        {/* ✅ CORRIGIDO: Adicionado component="div" para evitar o erro de aninhamento (div dentro de p) */}
+                        <Typography component="div" variant="body2" color="text.secondary" textAlign="center">
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                                 <Star color="primary" />
                                 🚀 Pronto para começar? Clique em "Criar Quiz" para gerar suas questões!
@@ -279,7 +268,6 @@ export default function StudentForm({ onSubmit, loading }) {
                         </Typography>
                     </Box>
                 );
-
             default:
                 return null;
         }

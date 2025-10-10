@@ -1,7 +1,9 @@
 // src/services/openAI.js
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
-// Função mock melhorada para desenvolvimento
+console.log('🔑 API Key carregada:', OPENAI_API_KEY ? '✅ SIM' : '❌ NÃO');
+
+// Função mock para desenvolvimento (fallback)
 async function generateMockQuiz(theme, subject, difficulty, numberOfQuestions = 5) {
     return new Promise((resolve) => {
         setTimeout(() => {
@@ -9,31 +11,57 @@ async function generateMockQuiz(theme, subject, difficulty, numberOfQuestions = 
 
             for (let i = 0; i < numberOfQuestions; i++) {
                 questions.push({
-                    question: `Questão ${i + 1} sobre ${theme} em ${subject} (${difficulty}): Qual é a característica principal?`,
+                    question: `[MOCK] Questão ${i + 1} sobre ${theme} em ${subject}: Qual é o conceito principal?`,
                     options: [
-                        `Alternativa A - Característica principal ${i + 1}`,
-                        `Alternativa B - Aspecto secundário ${i + 1}`,
-                        `Alternativa C - Elemento complementar ${i + 1}`,
-                        `Alternativa D - Fator irrelevante ${i + 1}`
+                        `Alternativa A - Conceito correto ${i + 1}`,
+                        `Alternativa B - Conceito incorreto ${i + 1}`,
+                        `Alternativa C - Conceito parcial ${i + 1}`,
+                        `Alternativa D - Conceito irrelevante ${i + 1}`
                     ],
-                    correctAnswer: Math.floor(Math.random() * 4) // Resposta aleatória para teste
+                    correctAnswer: 0 // Sempre a primeira para teste
                 });
             }
 
             resolve({ questions });
-        }, 2000);
+        }, 1000);
     });
 }
 
 export async function generateQuizQuestions(theme, subject, difficulty, numberOfQuestions = 5) {
-    // Modo desenvolvimento - sempre usa mock por enquanto
-    if (!OPENAI_API_KEY || OPENAI_API_KEY.includes('test') || OPENAI_API_KEY === 'sua_chave_aqui') {
+    // Verifica se temos uma chave válida
+    if (!OPENAI_API_KEY || OPENAI_API_KEY === 'sua_chave_aqui' || OPENAI_API_KEY.includes('test')) {
         console.log('🔧 Modo Desenvolvimento: Usando quiz mock');
+        console.log('💡 Dica: Configure VITE_OPENAI_API_KEY no arquivo .env para usar o ChatGPT real');
         return await generateMockQuiz(theme, subject, difficulty, numberOfQuestions);
     }
 
     try {
-        console.log('🤖 Gerando quiz com IA...');
+        console.log('🤖 Conectando com ChatGPT...');
+
+        const prompt = `
+Você é um professor especialista em criar questões educacionais para o ensino fundamental e médio.
+
+Crie ${numberOfQuestions} questões de múltipla escolha sobre "${theme}" na disciplina de ${subject}.
+Nível de dificuldade: ${difficulty}.
+
+REGRAS IMPORTANTES:
+1. Retorne APENAS JSON válido sem markdown ou texto adicional
+2. Formato exato requerido:
+{
+  "questions": [
+    {
+      "question": "texto da pergunta aqui",
+      "options": ["opção A", "opção B", "opção C", "opção D"],
+      "correctAnswer": 0
+    }
+  ]
+}
+3. As questões devem ser educativas e adequadas ao nível escolar
+4. As opções devem ser claras e distintas
+5. A resposta correta deve ser o índice (0-3) da opção correta
+6. Use linguagem apropriada para estudantes
+        `;
+
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -45,25 +73,11 @@ export async function generateQuizQuestions(theme, subject, difficulty, numberOf
                 messages: [
                     {
                         role: 'system',
-                        content: `Você é um professor especialista em criar questões educacionais. 
-                     Crie questões de múltipla escolha com 4 opções cada.
-                     Retorne APENAS JSON válido sem markdown.
-                     Formato exigido: {
-                       "questions": [
-                         {
-                           "question": "texto da pergunta",
-                           "options": ["opção A", "opção B", "opção C", "opção D"],
-                           "correctAnswer": 0
-                         }
-                       ]
-                     }`
+                        content: 'Você é um professor especialista. Sempre retorne APENAS JSON válido sem texto adicional.'
                     },
                     {
                         role: 'user',
-                        content: `Crie ${numberOfQuestions} questões sobre "${theme}" na matéria de ${subject}. 
-                     Dificuldade: ${difficulty}.
-                     As questões devem ser educativas e desafiadoras.
-                     A resposta correta deve ser o índice (0-3) da opção correta.`
+                        content: prompt
                     }
                 ],
                 temperature: 0.7,
@@ -72,32 +86,41 @@ export async function generateQuizQuestions(theme, subject, difficulty, numberOf
         });
 
         if (!response.ok) {
+            const errorData = await response.json();
+            console.error('❌ Erro da API OpenAI:', errorData);
             throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
         const content = data.choices[0].message.content;
 
-        console.log('📄 Resposta da IA:', content);
+        console.log('📄 Resposta bruta do ChatGPT:', content);
 
-        // Tenta extrair JSON
+        // Tenta extrair e parsear o JSON
         try {
+            // Remove possíveis markdown e extrai JSON
             const jsonMatch = content.match(/\{[\s\S]*\}/);
-            const parsedData = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(content);
+            if (!jsonMatch) {
+                throw new Error('Não foi possível encontrar JSON na resposta');
+            }
+
+            const parsedData = JSON.parse(jsonMatch[0]);
 
             // Valida a estrutura
-            if (parsedData.questions && Array.isArray(parsedData.questions)) {
+            if (parsedData.questions && Array.isArray(parsedData.questions) && parsedData.questions.length > 0) {
+                console.log('✅ Quiz gerado com sucesso pelo ChatGPT!');
                 return parsedData;
             } else {
-                throw new Error('Estrutura inválida do quiz');
+                throw new Error('Estrutura do quiz inválida');
             }
         } catch (parseError) {
-            console.error('❌ Erro ao parsear JSON da IA:', parseError);
-            throw new Error('Resposta da IA em formato inválido');
+            console.error('❌ Erro ao parsear JSON do ChatGPT:', parseError);
+            console.log('📝 Conteúdo que causou erro:', content);
+            throw new Error('Resposta do ChatGPT em formato inválido');
         }
 
     } catch (error) {
-        console.error('❌ Erro ao gerar questões com IA:', error);
+        console.error('❌ Erro ao gerar questões com ChatGPT:', error);
         console.log('🔄 Usando fallback para quiz mock...');
         return await generateMockQuiz(theme, subject, difficulty, numberOfQuestions);
     }
