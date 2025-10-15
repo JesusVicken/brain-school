@@ -302,7 +302,7 @@ function App() {
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
             <Box
               component="img"
-              src="/logo.png"
+              src="/logo2.png"
               alt="QuizzBrAIn Logo"
               sx={{ width: { xs: 120, sm: 180 }, height: 'auto' }}
             />
