@@ -1,10 +1,13 @@
+// src/App.jsx
 import { useState, useEffect } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { CssBaseline, Container, Box, Typography, Paper } from '@mui/material';
+import { CssBaseline, Container, Box, Typography, Paper, Button, Avatar } from '@mui/material';
+import { FcGoogle } from 'react-icons/fc';
 import QuizSetup from './components/QuizSetup.jsx';
 import QuizGame from './components/QuizGame.jsx';
-// import Footer from './components/Footer.jsx';
 import { generateQuizQuestions } from './services/gemini.js';
+
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from '../firebaseConfig.js';
 
 // Definição do tema do Material-UI
 const theme = createTheme({
@@ -21,7 +24,7 @@ const theme = createTheme({
   shape: { borderRadius: 12 },
 });
 
-// Função para embaralhar as opções de resposta
+// Função para embaralhar opções
 function shuffleOptions(options, correctAnswerIndex) {
   const correctAnswerValue = options[correctAnswerIndex];
   const shuffled = [...options];
@@ -34,11 +37,39 @@ function shuffleOptions(options, correctAnswerIndex) {
 }
 
 function App() {
+  const [user, setUser] = useState(null);
   const [student, setStudent] = useState(null);
   const [quiz, setQuiz] = useState(null);
   const [processedQuiz, setProcessedQuiz] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Detecta alterações de autenticação
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      console.error('Erro ao fazer login com Google:', err);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setStudent(null);
+      setQuiz(null);
+      setProcessedQuiz(null);
+    } catch (err) {
+      console.error('Erro ao sair:', err);
+    }
+  };
 
   const handleQuizSetupSubmit = async (setupData) => {
     setLoading(true);
@@ -57,12 +88,10 @@ function App() {
     });
 
     try {
-      console.log('🎯 Iniciando geração de quiz para:', setupData);
       const quizData = await generateQuizQuestions(setupData);
-      console.log('✅ Quiz gerado com sucesso (bruto):', quizData);
       setQuiz(quizData);
     } catch (error) {
-      console.error('❌ Erro ao gerar quiz:', error);
+      console.error(error);
       setError('Falha ao gerar o quiz. Verifique os dados fornecidos e tente novamente.');
       setStudent(null);
     } finally {
@@ -74,13 +103,8 @@ function App() {
     if (quiz && quiz.questions) {
       const newQuestions = quiz.questions.map(q => {
         const { shuffledOptions, newCorrectAnswerIndex } = shuffleOptions(q.options, q.correctAnswer);
-        return {
-          ...q,
-          options: shuffledOptions,
-          correctAnswer: newCorrectAnswerIndex,
-        };
+        return { ...q, options: shuffledOptions, correctAnswer: newCorrectAnswerIndex };
       });
-      console.log('🔀 Quiz com opções embaralhadas:', { questions: newQuestions });
       setProcessedQuiz({ questions: newQuestions });
     } else {
       setProcessedQuiz(null);
@@ -94,19 +118,63 @@ function App() {
     setError(null);
   };
 
+  // Se usuário não logado, mostra botão oficial do Google
+  if (!user) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+          flexDirection: 'column',
+          gap: 3
+        }}>
+          <Typography variant="h4" color="primary.main" sx={{ fontWeight: 700 }}>
+            Faça login para jogar o QuizzBrAIn 🎓
+          </Typography>
+          <Button
+            onClick={handleGoogleLogin}
+            sx={{
+              px: 5,
+              py: 1.5,
+              fontSize: '1.1rem',
+              textTransform: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              border: '1px solid #dadce0',
+              borderRadius: 2,
+              backgroundColor: '#fff',
+              '&:hover': { backgroundColor: '#f5f5f5' }
+            }}
+          >
+            <FcGoogle size={28} />
+            Entrar com Google
+          </Button>
+        </Box>
+      </ThemeProvider>
+    );
+  }
+
+  // Usuário logado
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)', display: 'flex', flexDirection: 'column' }}>
         <Container maxWidth="md" sx={{ py: 4, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-          <Box textAlign="center" mb={4}>
-            <Typography variant="h3" component="h1" color="primary.main" gutterBottom sx={{ fontWeight: 700, background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h3" color="primary.main" sx={{ fontWeight: 700, background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               🎓 QuizzBrAIn
             </Typography>
-            <Typography variant="h6" color="text.secondary">
-              Estude de forma divertida com seu material de estudo.
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Avatar src={user.photoURL} alt={user.displayName} />
+              <Button variant="outlined" color="secondary" onClick={handleLogout}>Sair</Button>
+            </Box>
           </Box>
+
           <Paper elevation={8} sx={{ borderRadius: 3, overflow: 'hidden', background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
             {!student && !loading ? (
               <QuizSetup onSubmit={handleQuizSetupSubmit} loading={loading} />
@@ -114,7 +182,6 @@ function App() {
               <QuizGame student={student} quiz={processedQuiz} onRestart={handleRestart} loading={loading} error={error} />
             )}
           </Paper>
-          {/* <Footer /> */}
         </Container>
       </Box>
     </ThemeProvider>
